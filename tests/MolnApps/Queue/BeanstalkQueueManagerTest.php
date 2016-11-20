@@ -12,7 +12,7 @@ use \MolnApps\Queue\Worker\Monitor;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
-class QueueTest extends \PHPUnit_Framework_TestCase
+class BeanstalkQueueManagerTest extends \PHPUnit_Framework_TestCase
 {
 	private $monitor;
 	private $worker;
