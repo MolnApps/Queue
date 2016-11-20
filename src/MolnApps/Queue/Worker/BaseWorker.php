@@ -29,10 +29,11 @@ class BaseWorker implements Worker
 		$this->queue = $queue;
 		$this->monitor = $monitor;
 
-		$this->log('Set up worker ' . $workerId);
-
 		$this->workerId = $workerId;
 		$this->workerHash = md5(rand(0,99999999999));
+
+		$this->log('Set up worker ' . $workerId);
+
 		$this->startTime = time();
         $this->timeLimit = 60 * 60 * 1; // Minimum of 1 hour
         $this->timeLimit += rand(0, 60 * 30); // Adding additional time between 0 to 30 minutes
