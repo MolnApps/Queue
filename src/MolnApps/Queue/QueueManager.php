@@ -32,7 +32,7 @@ class QueueManager
 		}
 	}
 
-	public function getQueue()
+	public function getQueue($name = null)
 	{
 		return $this->queue;
 	}

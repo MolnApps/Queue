@@ -9,6 +9,9 @@ use \MolnApps\Queue\Testing\ThrowsExceptionJob;
 use \MolnApps\Queue\Worker\BaseWorker;
 use \MolnApps\Queue\Worker\Monitor;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 class QueueTest extends \PHPUnit_Framework_TestCase
 {
 	private $monitor;
@@ -16,6 +19,7 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
+		// Create a queue
 		$this->queue = QueueManager::make([
 			'driver' => 'beanstalk',
 			'host' => '127.0.0.1',
@@ -23,7 +27,14 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 			'reserve' => '1',
 		])->getQueue();
 
-		$this->monitor = new Monitor;
+		// Create a monitor with a logger
+		$logger = new Logger('sample');
+		$logger->pushHandler(new StreamHandler('/var/www/log/test.log', Logger::DEBUG));
+
+		$this->monitor = new Monitor('sample');
+		$this->monitor->setLogger($logger);
+
+		// Create a worker
 		$this->worker = new BaseWorker($this->queue, $this->monitor, 1);
 	}
 
@@ -51,9 +62,12 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals(1, $this->queue->getJobsBuried());
 
 		// And takes a snapshot during the process
-		$snapshot = $this->monitor->getSnapshot($this->worker->getWorkerId());
+		$snapshot = $this->monitor->getLastHeartbeat($this->worker->getWorkerId());
 		$this->assertNotNull($snapshot);
-		$this->assertContains($this->worker->getWorkerHash(), $snapshot);
-
+		$this->assertEquals($this->worker->getWorkerId(), $snapshot->workerId);
+		$this->assertEquals($this->worker->getWorkerHash(), $snapshot->workerHash);
+		$this->assertEquals(gmdate('Y-m-d H:i:s'), $snapshot->timestamp);
+		$this->assertEquals(4, $snapshot->jobsCount);
+		$this->assertEquals(1, $snapshot->errorsCount);
 	}
 }

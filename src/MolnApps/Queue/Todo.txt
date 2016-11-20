@@ -1,0 +1,3 @@
+Todo:
+— Use supervisord
+— Introduce succesfull jobs recording

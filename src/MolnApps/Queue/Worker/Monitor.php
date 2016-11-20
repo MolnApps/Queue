@@ -4,6 +4,8 @@ namespace MolnApps\Queue\Worker;
 
 use \Predis\Client as Predis;
 
+use Monolog\Logger;
+
 class Monitor
 {
 	private static $instance;
@@ -15,19 +17,27 @@ class Monitor
 		$this->redis = new Predis('tcp://127.0.0.1:6379');
 	}
 
-	public function takeSnapshot(array $snapshot)
+	public function setLogger(Logger $logger)
 	{
-		$json = json_encode($snapshot);
-		$this->redis->hset('worker.status', $snapshot['workerId'], $json);
+		$this->log = $logger;
+	}
+
+	public function setHeartbeat(array $heartbeat)
+	{
+		$json = json_encode($heartbeat);
+		$this->redis->hset('worker.status', $heartbeat['workerId'], $json);
+	}
+
+	public function getLastHeartbeat($workerId)
+	{
+		$json = $this->redis->hget('worker.status', $workerId);
+		return json_decode($json);
 	}
 
 	public function log($message)
 	{
-		//echo $message . PHP_EOL;
-	}
-
-	public function getSnapshot($workerId)
-	{
-		return $this->redis->hget('worker.status', $workerId);
+		if ($this->log) {
+			$this->log->notice($message);
+		}
 	}
 }

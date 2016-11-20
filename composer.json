@@ -12,7 +12,8 @@
     "minimum-stability": "stable",
     "require": {
         "pda/pheanstalk": "3.*",
-        "predis/predis": "v1.*"
+        "predis/predis": "v1.*",
+        "monolog/monolog": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "5.*"

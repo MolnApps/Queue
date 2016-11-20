@@ -18,6 +18,9 @@ class BaseWorker implements Worker
 	private $startTime;
 	private $endTime;
 
+	private $jobsCount = 0;
+	private $errorsCount = 0;
+
 	private $monitor;
 	private $queue;
 
@@ -69,11 +72,11 @@ class BaseWorker implements Worker
 				$this->checkStatus();
 			}
 
-			$this->updateStatus('stopping');
+			$this->updateStatus('stopped');
 		} catch (\Exception $e) {
 			$this->updateStatus('aborting');
 
-			$this->log("Exception Caught: ".$e->getMessage());
+			$this->log('Exception caught: [' . $e->getMessage() . ']');
 		}
 	}
 
@@ -95,16 +98,6 @@ class BaseWorker implements Worker
 		return $this->handleJob($job);
 	}
 
-	private function checkStatus()
-	{
-		$this->updateStatus('checking status');
-
-		if (time() > $this->endTime) {
-            $this->log("Worker has expired");
-            $this->stop();
-        }
-	}
-
 	public function stop()
 	{
 		$this->updateStatus('stopping worker');
@@ -123,7 +116,10 @@ class BaseWorker implements Worker
 		try {
 			$this->performJob($job);
 			$this->deleteJob($job);
+			$this->increaseJobsCount();
 		} catch (\Exception $e) {
+			$this->increaseErrorsCount();
+			$this->log('Exception caught: [' . $e->getMessage() . ']');
 			$this->buryJob($job);
 		}
 	}
@@ -152,27 +148,41 @@ class BaseWorker implements Worker
 		$job->bury();
 	}
 
+	private function checkStatus()
+	{
+		$this->updateStatus('checking status');
+
+		if (time() > $this->endTime) {
+            $this->log("Worker has expired");
+            $this->stop();
+        }
+	}
+
 	private function updateStatus($status)
 	{
 		$this->status = $status;
 
-		$this->takeSnapshot();
+		$this->heartbeat();
 	}
 
-	private function takeSnapshot()
+	private function heartbeat()
 	{
-		$this->getMonitor()->takeSnapshot([
-			"workerId" => $this->workerId,
-			"workerHash" => $this->workerHash,
-			"timeLimit" => $this->timeLimit,
-			"endTime" => $this->endTime,
-			"status" => $this->status
+		$this->getMonitor()->setHeartbeat([
+			'workerId' => $this->workerId,
+			'workerHash' => $this->workerHash,
+			'startTime' => $this->startTime,
+			'timeLimit' => $this->timeLimit,
+			'endTime' => $this->endTime,
+			'status' => $this->status,
+			'timestamp' => $this->freshTimestamp(),
+			'jobsCount' => $this->jobsCount,
+			'errorsCount' => $this->errorsCount,
 		]);
 	}
 
 	private function log($message)
 	{
-		$log = '[' . gmdate('H:i:s') . '] ' . $message;
+		$log = '[' . $this->shortHash() . '] ' . $message;
 
 		$this->getMonitor()->log($log);
 	}
@@ -180,5 +190,25 @@ class BaseWorker implements Worker
 	private function getMonitor()
 	{
 		return $this->monitor;
+	}
+
+	private function freshTimestamp()
+	{
+		return gmdate("Y-m-d H:i:s");
+	}
+
+	private function shortHash()
+	{
+		return substr($this->workerHash, 0, 5);
+	}
+
+	private function increaseJobsCount()
+	{
+		++$this->jobsCount;
+	}
+
+	private function increaseErrorsCount()
+	{
+		++$this->errorsCount;
 	}
 }

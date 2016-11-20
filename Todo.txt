@@ -1,0 +1,5 @@
+Todo:
+— Use monolog
+— Introduce executed jobsCount
+— Introduce errorsCount
+— Introduce succesfull jobs recording
