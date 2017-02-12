@@ -9,7 +9,7 @@ class SyncDriver implements QueueDriver
 	private $performedCount;
 	private $buriedCount;
 
-	public function addJob($serializedJob)
+	public function addJob($serializedJob, $priority, $delay, $timeToRun)
 	{
 		$job = JobSerializer::take($serializedJob);
 

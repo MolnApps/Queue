@@ -3,6 +3,7 @@
 namespace MolnApps\Queue;
 
 use \MolnApps\Queue\Testing\SampleJob;
+use \MolnApps\Queue\Testing\LongJob;
 use \MolnApps\Queue\Testing\StopWorkerJob;
 use \MolnApps\Queue\Testing\ThrowsExceptionJob;
 
@@ -14,6 +15,7 @@ use Monolog\Handler\StreamHandler;
 
 class BeanstalkQueueManagerTest extends \PHPUnit_Framework_TestCase
 {
+	private $queue;
 	private $monitor;
 	private $worker;
 
@@ -36,15 +38,14 @@ class BeanstalkQueueManagerTest extends \PHPUnit_Framework_TestCase
 
 		// Create a worker
 		$this->worker = new BaseWorker($this->queue, $this->monitor, 1);
+
+		$this->queue->erase();
 	}
 
 	/** @test */
 	public function it_listens_for_a_job_with_beanstalk()
 	{
-		// And the queue is empty
-		$this->queue->erase();
-
-		// And I add some jobs to the queue
+		// Assuming I add some jobs to the queue
 		$this->queue->addJob(SampleJob::class, ['message' => 'Foo']);
 		$this->queue->addJob(SampleJob::class, ['message' => 'Bar']);
 		$this->queue->addJob(ThrowsExceptionJob::class, ['message' => 'Baz']);
@@ -57,7 +58,7 @@ class BeanstalkQueueManagerTest extends \PHPUnit_Framework_TestCase
 		// When I have a worker listening for a job
 		$this->worker->run();
 		
-		// The the worker performs all the jobs
+		// Then the worker performs all the jobs
 		$this->assertEquals(0, $this->queue->getJobsReady());
 		$this->assertEquals(1, $this->queue->getJobsBuried());
 

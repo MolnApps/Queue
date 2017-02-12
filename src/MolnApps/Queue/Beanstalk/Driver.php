@@ -21,11 +21,11 @@ class Driver implements QueueDriver, QueueDriverInspector
 		$this->reserve = isset($config['reserve']) ? $config['reserve'] : 10;
 	}
 
-	public function addJob($serializedJob)
+	public function addJob($serializedJob, $priority, $delay, $timeToRun)
 	{
 		$this->pheanstalk
 			->useTube($this->tube)
-			->put($serializedJob);
+			->put($serializedJob, $priority, $delay, $timeToRun);
 	}
 
 	public function getJob()
@@ -50,6 +50,11 @@ class Driver implements QueueDriver, QueueDriverInspector
 	public function getJobsBuried()
 	{
 		return $this->getStats('current-jobs-buried');
+	}
+
+	public function getUsing()
+	{
+		return $this->getStats('current-using');
 	}
 
 	private function getStats($key)

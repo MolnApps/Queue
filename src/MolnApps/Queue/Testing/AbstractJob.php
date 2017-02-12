@@ -14,6 +14,11 @@ abstract class AbstractJob implements Job
 		$this->data = $data;
 	}
 
+	public function getData()
+	{
+		return $this->data;
+	}
+
 	public function setIdentifier($identifier)
 	{
 		$this->identifier = $identifier;

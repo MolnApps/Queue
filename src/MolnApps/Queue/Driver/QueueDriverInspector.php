@@ -6,4 +6,5 @@ interface QueueDriverInspector
 {
 	public function getJobsReady();
 	public function getJobsBuried();
+	public function getUsing();
 }
