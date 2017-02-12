@@ -10,11 +10,21 @@ class Queue
 {
 	private $driver;
 
-	private $priority = 1024;
-	private $delay = 0;
-	private $timeToRun = 60;
-
+	private $jobParams = [];
+	private $defaultJobParams = [
+		'priority' => 1024,
+		'delay' => 0,
+		'timeToRun' => 60
+	];
+	
 	private $job;
+
+	public function __construct()
+	{
+		$this->setDefaultJobParams();
+	}
+
+	// ! Driver methods
 
 	public function setDriver(QueueDriver $driver)
 	{
@@ -30,38 +40,72 @@ class Queue
 		return $this->driver;
 	}
 
-	public function withTimeToRun($timeToRun)
-	{
-		$this->timeToRun = $timeToRun;
-
-		return $this;
-	}
-
-	public function withDelay($delay)
-	{
-		$this->delay = $delay;
-
-		return $this;
-	}
-
-	public function withPriority($priority)
-	{
-		$this->priority = $priority;
-
-		return $this;
-	}
+	// ! Job methods
 
 	public function addJob($jobName, array $data)
 	{
 		$serializedJob = JobSerializer::make($jobName, $data);
 
-		$this->getDriver()->addJob($serializedJob, $this->priority, $this->delay, $this->timeToRun);
+		$this->getDriver()->addJob($serializedJob, $this->getPriority(), $this->getDelay(), $this->getTimeToRun());
+
+		$this->setDefaultJobParams();
 	}
 
 	public function getJob()
 	{
 		return $this->getDriver()->getJob();
 	}
+
+	// ! Job params methods
+
+	public function withTimeToRun($timeToRun)
+	{
+		return $this->withJobParams(['timeToRun' => $timeToRun]);
+	}
+
+	public function withDelay($delay)
+	{
+		return $this->withJobParams(['delay' => $delay]);
+	}
+
+	public function withPriority($priority)
+	{
+		return $this->withJobParams(['priority' => $priority]);
+	}
+
+	public function withJobParams(array $jobParams)
+	{
+		$this->jobParams = array_merge($this->jobParams, $jobParams);
+
+		return $this;
+	}
+
+	public function getTimeToRun()
+	{
+		return $this->getJobParam('timeToRun');
+	}
+
+	public function getDelay()
+	{
+		return $this->getJobParam('delay');
+	}
+
+	public function getPriority()
+	{
+		return $this->getJobParam('priority');
+	}
+
+	private function getJobParam($jobParam)
+	{
+		return isset($this->jobParams[$jobParam]) ? $this->jobParams[$jobParam] : null;
+	}
+
+	private function setDefaultJobParams()
+	{
+		$this->jobParams = $this->defaultJobParams;
+	}
+
+	// ! Magic methods
 
 	public function __call($method, $args)
 	{
