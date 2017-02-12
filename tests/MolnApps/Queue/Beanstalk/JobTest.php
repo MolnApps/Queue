@@ -45,4 +45,16 @@ class JobTest extends \PHPUnit_Framework_TestCase
 
 		$job->bury();
 	}
+
+	/** @test */
+	public function it_can_be_touched()
+	{
+		$this->pheanstalkProphet->touch($this->pheanstalkJobMock)->shouldBeCalled();
+
+		$job = new Job($this->pheanstalkProphet->reveal(), $this->pheanstalkJobMock);
+
+		$this->assertInstanceOf(\MolnApps\Queue\Job\Touchable::class, $job);
+
+		$job->touch();
+	}
 }

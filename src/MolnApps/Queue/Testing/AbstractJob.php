@@ -3,6 +3,7 @@
 namespace MolnApps\Queue\Testing;
 
 use \MolnApps\Queue\Job\Job;
+use \MolnApps\Queue\Job\Touchable;
 
 abstract class AbstractJob implements Job
 {
@@ -27,6 +28,16 @@ abstract class AbstractJob implements Job
 	public function getIdentifier()
 	{
 		return $this->identifier ?: get_class();
+	}
+
+	public function setTouchable(Touchable $touchable)
+	{
+		$this->touchable = $touchable;
+	}
+	
+	protected function touch()
+	{
+		$this->touchable->touch();
 	}
 
 	public function perform()

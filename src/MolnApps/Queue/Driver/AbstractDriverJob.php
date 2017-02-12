@@ -5,8 +5,9 @@ namespace MolnApps\Queue\Driver;
 use \MolnApps\Queue\Job\JobSerializer;
 
 use \MolnApps\Queue\Job\JobStopsWorker;
+use \MolnApps\Queue\Job\Touchable;
 
-abstract class AbstractDriverJob
+abstract class AbstractDriverJob implements Touchable
 {
 	private $job;
 
@@ -34,6 +35,7 @@ abstract class AbstractDriverJob
 	{
 		if ( ! $this->job) {
 			$this->job = JobSerializer::take($this->getSerializedJob());
+			$this->job->setTouchable($this);
 		}
 
 		return $this->job;

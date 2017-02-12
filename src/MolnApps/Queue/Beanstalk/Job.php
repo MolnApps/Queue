@@ -33,4 +33,9 @@ class Job extends AbstractDriverJob
 	{
 		$this->pheanstalk->bury($this->pheanstalkJob);
 	}
+
+	public function touch()
+	{
+		$this->pheanstalk->touch($this->pheanstalkJob);
+	}
 }
